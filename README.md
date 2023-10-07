@@ -36,6 +36,18 @@ Obtain an API key from OpenAI. Visit [OpenAI's platform](https://beta.openai.com
 - `BITBUCKET_API_URL`: API Base URL (e.g., `https://api.bitbucket.org/2.0` for Cloud or your Bitbucket Data Center API Base URL).
 - `BITBUCKET_WORKSPACE`: (For Cloud) Your Bitbucket workspace.
 
+### Using Azure OpenAI API
+
+To utilize Azure OpenAI API instead of the standard OpenAI API, follow the steps below:
+
+1. Ensure that your Azure OpenAI API is set up and note down the API key.
+2. Set the following environment variables:
+   - `API_TYPE=azure`: This tells the application to use the Azure OpenAI API settings.
+   - `API_BASE`: The base URL of your Azure OpenAI API. Default is "https://{Company}openai.openai.azure.com/".
+   - `API_VERSION`: The version of your Azure OpenAI API. Default is "2023-07-01-preview".
+   
+If you wish to switch back to the standard OpenAI API, you can simply change or remove the `API_TYPE` environment variable.
+
 ### 4. Docker Build and Run
 ```sh
 docker build -t code_review_bot .
