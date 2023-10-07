@@ -37,8 +37,15 @@ if os.getenv('DEBUG'):
 # Setup Flask app
 app = Flask(__name__)
 
-# OpenAI API key
+# Fetch API details from environment variables
+api_type = os.getenv("API_TYPE", "openai")  # Default to "openai" if no API_TYPE is provided
 openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Set up API details based on the type
+if api_type == "azure":
+    openai.api_type = "azure"
+    openai.api_base = os.getenv("API_BASE")
+    openai.api_version = os.getenv("API_VERSION", "2023-07-01-preview")  # Default version
 
 # Bitbucket OAuth credentials
 BITBUCKET_KEY = os.getenv('BITBUCKET_KEY')
@@ -54,7 +61,8 @@ BITBUCKET_WORKSPACE = os.getenv('BITBUCKET_WORKSPACE', None)
 oauth = OAuth1Session(BITBUCKET_KEY, client_secret=BITBUCKET_SECRET)
 
 # Maximum tokens per request for the OpenAI API
-MAX_TOKENS = 4096  # Adjust as per your model's maximum limit
+MAX_TOKENS = os.getenv("MAX_TOKENS", 4096)  # Default to 4096 Tokens, If no MAX_TOKENS provided.  Adjust as per your model's maximum limit
+MODEL_TYPE = os.getenv("MODEL_TYPE", "gpt-3.5-turbo-16k")  # Default to "gpt-3.5-turbo-16k" if no MODEL_TYPE is provided
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -107,7 +115,7 @@ def generate_review(patch):
         try:
             # Using the chat API
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo-16k",
+                model=MODEL_TYPE,
                 messages=[
                     {"role": "system", "content": "You are a Senior Developer with many years of experience. You are always concise and constructive in your code reviews."},
                     {"role": "user", "content": prompt}
