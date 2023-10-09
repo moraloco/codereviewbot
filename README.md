@@ -1,5 +1,5 @@
 
-# Code Review Bot using OpenAI and Bitbucket Webhooks
+# Code Review Bot using OpenAI and Bitbucket Webhooks with OAuth 2.0
 
 A Python bot that performs code reviews by integrating Bitbucket pull request webhooks and OpenAI's ChatGPT, capable of working with both Bitbucket Cloud and Data Center.
 
@@ -7,7 +7,7 @@ A Python bot that performs code reviews by integrating Bitbucket pull request we
 
 - **Webhook Listener**: Listens for Bitbucket pull request webhooks.
 - **OpenAI API Interaction**: Sends code diffs to OpenAI API and retrieves generated reviews.
-- **Bitbucket API Interaction**: Posts the generated reviews as comments on Bitbucket pull requests.
+- **Bitbucket API Interaction**: Uses OAuth 2.0 to securely post the generated reviews as comments on Bitbucket pull requests.
 
 ## Prerequisites
 
@@ -19,11 +19,12 @@ A Python bot that performs code reviews by integrating Bitbucket pull request we
 ## Setup and Configuration
 
 ### 1. Bitbucket OAuth Consumer
-Create an OAuth consumer in Bitbucket.
+Create an OAuth consumer in Bitbucket using OAuth 2.0 with Grant Type Credentials.
 
 - Navigate to Bitbucket settings.
 - Under "Access Management", select "OAuth".
 - Click "Add consumer" and set the permissions (ensure write access to pull requests).
+- **Callback URL**: Set a callback URL even though it is not used in this application, for instance, `https://localhost/`.
 - Note down the key and secret.
 
 ### 2. OpenAI API Key
@@ -68,9 +69,9 @@ Create a pull request on your Bitbucket repository and observe the bot posting a
 
 ## Note
 
-- **Security**: Use HTTPS for production deployment and validate webhook requests.
+- **Security**: Ensure to use HTTPS for production deployment and validate webhook requests using secret verifications.
 - **Handling Larger Diffs**: The bot sends code diffs in chunks to the OpenAI API and concatenates responses.
-- **Rate Limiting**: Be mindful of OpenAI API rate limits and configure the bot accordingly.
+- **Rate Limiting**: Be aware of OpenAI API rate limits and configure the bot to handle them gracefully.
 - **API Interaction**: Adjust API interaction and payload handling according to Bitbucket Cloud or Data Center requirements.
 - **Error Handling**: Consider enhancing error handling and logging as per your deployment scenario.
 
@@ -86,4 +87,4 @@ MIT License. See [LICENSE.md](LICENSE.md) for details.
 
 ## Contribution
 
-Fork, modify, and contribute to enhance functionality or adapt to specific use-cases.
+Feel free to fork, modify, and contribute to enhance functionality or adapt to specific use-cases. Contributions, issues, and feature requests are welcome!
