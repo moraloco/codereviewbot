@@ -16,6 +16,9 @@ import os
 # Setup Flask app
 app = Flask(__name__)
 
+# Fetch SSL Mode
+SSL_MODE = os.getenv('SSL_MODE', 'none')  # Default to 'none' if SSL_MODE is not set
+
 # Fetch API details from environment variables
 API_TYPE = os.getenv("API_TYPE", "openai")
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -76,4 +79,14 @@ def process_webhook_in_thread(handler):
 
 if __name__ == "__main__":
     logger.debug("Starting the app...")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    if SSL_MODE == 'none':
+        ssl_context = None
+    elif SSL_MODE == 'adhoc':
+        ssl_context = 'adhoc'
+    elif SSL_MODE == 'custom':
+        ssl_context = (os.getenv('SSL_CERT_PATH'), os.getenv('SSL_KEY_PATH'))
+    else:
+        raise ValueError(f'Invalid SSL_MODE: {SSL_MODE}')
+
+
+    app.run(host='0.0.0.0', port=5000, debug=False, ssl_context=ssl_context)
