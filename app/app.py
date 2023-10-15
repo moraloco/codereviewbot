@@ -1,5 +1,5 @@
 import logging
-from logging_config import configure_logging
+from utils.logging_config import configure_logging
 
 # Setup logging
 configure_logging()
@@ -7,14 +7,16 @@ logger = logging.getLogger(__name__)
 
 import threading
 from flask import Flask, request, jsonify
-from bitbucket_oauth import BitbucketOAuth
-from reviewer import Reviewer
-from webhook_handler import WebhookHandler
-from config import configurations
+from reviewers.generic_reviewer import Reviewer
+from utils.config import configurations
+from utils.handler_utils import HandlerUtils
 import os
 
 # Setup Flask app
 app = Flask(__name__)
+
+# Fetch platform type from environment variables
+PLATFORM_TYPE = os.getenv("PLATFORM_TYPE", "bitbucket_cloud")  # Default to 'bitbucket_cloud' if not set
 
 # Fetch SSL Mode
 SSL_MODE = os.getenv('SSL_MODE', 'none')  # Default to 'none' if SSL_MODE is not set
@@ -23,20 +25,18 @@ SSL_MODE = os.getenv('SSL_MODE', 'none')  # Default to 'none' if SSL_MODE is not
 API_TYPE = os.getenv("API_TYPE", "openai")
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 BITBUCKET_WORKSPACE = os.getenv('BITBUCKET_WORKSPACE', None)
-is_cloud = bool(BITBUCKET_WORKSPACE)
 
-# Select the configuration based on the type of Bitbucket instance
-if is_cloud:
-    provider_config = configurations['bitbucket_cloud']
-else:
-    provider_config = configurations['bitbucket_data_center']
+# Select the configuration based on the platform type
+provider_config = configurations.get(PLATFORM_TYPE.lower())
+if provider_config is None:
+    raise ValueError(f"Invalid platform: {PLATFORM_TYPE}")
 
 # Model configuration for OpenAI
 MODEL_TYPE = os.getenv("MODEL_TYPE", "gpt-3.5-turbo-16k")
 MAX_TOKENS = os.getenv("MAX_TOKENS", 4096)
 
 # Initialize classes
-oauth_handler = BitbucketOAuth(provider_config, BITBUCKET_WORKSPACE)
+oauth_handler = HandlerUtils.load_oauth_handler(PLATFORM_TYPE, provider_config, BITBUCKET_WORKSPACE)
 reviewer = Reviewer(OPENAI_API_KEY, API_TYPE, MODEL_TYPE, MAX_TOKENS)
 
 @app.route('/health', methods=['GET'])
@@ -59,9 +59,9 @@ def handle_webhook():
     
     logger.debug("Webhook data received: %s", data)
 
-    # Initialize WebhookHandler
+    # Initialize WebhookHandler dynamically
     logger.debug("Attempting to create WebhookHandler instance...")
-    handler = WebhookHandler(data, is_cloud, oauth_handler, reviewer)
+    handler = HandlerUtils.load_webhook_handler(data, oauth_handler, reviewer, PLATFORM_TYPE)
     logger.debug("WebhookHandler instance created successfully.")
     
     # Use threading to process webhook in the background

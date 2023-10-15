@@ -3,14 +3,15 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
+from oauth.generic_oauth import GenericOAuth  # Adjust the import path as per your project structure
+
 # Ensure logger is configured.
 logger = logging.getLogger(__name__)
 logger.propagate = True
 
-class BitbucketOAuth:
+class BitbucketOAuth(GenericOAuth):
     def __init__(self, config, workspace):
-        self.config = config
-        self.bitbucket_api_url = self.config['bitbucket_api_url']
+        super().__init__(config)
         self.workspace = workspace
 
     def fetch_token(self):
@@ -19,7 +20,7 @@ class BitbucketOAuth:
                 self.config['token_url'], 
                 auth=HTTPBasicAuth(self.config['client_id'], self.config['client_secret']),
                 data={'grant_type': 'client_credentials'},
-                verify=True  # Ensure SSL/TLS verification. Enabling for security reasons.
+                verify=True  # Ensure SSL/TLS verification.
             )
             response.raise_for_status()  # Ensure non-2XX status codes raise an exception.
             return response.json().get('access_token')
@@ -31,13 +32,13 @@ class BitbucketOAuth:
             return None
 
     def api_request(self, method, url, **kwargs):
-        self.access_token = self.fetch_token()
+        access_token = self.fetch_token()
         
-        if not self.access_token:
+        if not access_token:
             logger.error("No access token available. Cannot make API request.")
             return None
         
-        headers = {'Authorization': f'Bearer {self.access_token}'}
+        headers = {'Authorization': f'Bearer {access_token}'}
         try:
             response = requests.request(method, url, headers=headers, **kwargs)
             response.raise_for_status()
